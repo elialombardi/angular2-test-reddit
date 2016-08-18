@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "clean": "rm -f ./*.js; rm -f ./*.js.map; rm -f ./intermediates/*.js; rm -f ./intermediates/*.js.map",
+    "clean": "rm -f ./*.js; rm -f ./*.js.map; rm -f ./intermediates/*.js; rm -f ./intermediates/*.js.map; rm -f ./css/*css",
     "tsc": "./node_modules/.bin/tsc",
     "tsc:w": "./node_modules/.bin/tsc -w",
+    "less": "node_modules/.bin/less-watch-compiler less css main.less",
     "serve": "./node_modules/.bin/live-server --host=localhost --port=8080 .",
-    "go": "concurrent \"npm run tsc:w\" \"npm run serve\" "
+    "go": "concurrent \"npm run tsc:w\" \"npm run less\" \"npm run serve\" "
   },
   "license": "ISC",
   "dependencies": {
@@ -33,7 +34,10 @@
   },
   "devDependencies": {
     "concurrently": "1.0.0",
+    "less": "^2.7.1",
+    "less-watch-compiler": "^1.2.3",
     "live-server": "0.9.0",
+    "npm-watch": "^0.1.6",
     "typescript": "1.7.3"
   }
 }
