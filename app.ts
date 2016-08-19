@@ -2,15 +2,23 @@ import { bootstrap } from "@angular/platform-browser-dynamic";
 import { Component, EventEmitter } from "@angular/core";
 
 class Article {
+    static articlesCounter: number = 0
+    id: number;
     title: string;
     link: string;
     votes: number;
+    image: string;
+    categories: string[];
 
-    constructor(title: string, link: string, votes?:number) {
+    constructor(title: string, link: string, votes?:number, image?: string, categories?: string[]) {
+        this.id = Article.articlesCounter++;
         this.title = title;
         this.link = link;
         this.votes = votes || 0;
+        this.image = image || '';
+        this.categories = categories || [];
     }
+
     voteUp() {
         this.votes += 1;
     }
@@ -21,25 +29,59 @@ class Article {
 
     domain(): string {
         try {
-            const link: string = this.link.split('//')[1];
-            return link.split('/')[0];
+            let link: string = this.link.split('//')[1];
+            
+            link = link.split('/')[0];
+            
+            if(/^www./.test(link)) link = link.split('www.')[1];
+
+            return link;
         } catch (err) {
-            return null;
+            return this.link;
         }
     }
+
     equals(article: Article): boolean {
-        return (article.title === this.title && article.link === this.link);
+        return (article.id === this.id);
     }
+}
+
+@Component({
+    selector: 'reddit-article-image',
+    inputs: ['image'],
+    template: `
+    <img [src]="image" />
+    `
+})
+class ArticleImage {
+    image: string;
+}
+
+@Component({
+    selector: 'reddit-article-categories',
+    inputs: ['categories'],
+    template: `
+    <div class="article-categories">
+    <span *ngFor="let c of categories; let i=index">
+        <a href='#'>{{c}}</a>
+        {{ i < (categories.length - 1) ? '>' : '' }}
+    </span>
+    </div>
+    `
+})
+class ArticleCategories {
+    categories: string[];
 }
 
 @Component({
     selector: 'reddit-article',
     inputs: ['article'],
+    directives: [ArticleImage, ArticleCategories],
     host: {
         class: 'row'
     },
     template: `
-    <div class="four wide column center aligned votes">
+    <div class="two wide column center aligned votes">
         <div class="ui statistic">
             <div class="value">
                 {{ article.votes }}
@@ -49,9 +91,11 @@ class Article {
             </div>
         </div>
     </div>
+    <reddit-article-image *ngIf="article.image" class="two wide column" [image]="article.image"></reddit-article-image>
     <div class="twelve wide column">
         <a class="ui large header" href="{{ article.link }}" target="_blank">{{ article.title }}</a>
-        <div class="meta">({{article.domain()}})</div>
+        <div class="meta">({{ article.domain() }})</div>
+        <reddit-article-categories *ngIf="article.categories" [categories]="article.categories"></reddit-article-categories>
         <ul class="ui big horizontal list voters">
             <li class="item">
                 <a href (click)="voteUp()">
@@ -130,7 +174,7 @@ class ArticleForm {
     template: `
     <reddit-form (newArticle)="newArticle($event)"></reddit-form>
     <div class="ui grid posts">
-        <reddit-article 
+        <reddit-article
             *ngFor="let article of sortedArticles()" 
             [article]="article" 
             (click)="selectedArticle(article)"
@@ -147,9 +191,13 @@ class RedditApp {
     constructor() {
         this.onArticleSelected = new EventEmitter();
         this.articles = [
-            new Article('Angular2 di Elia Lombardi', 'http://www.elia.lombardi.it', 10),
-            new Article('React di Elia Lombardi', 'http://www.elia.lombardi.it', 5),
-            new Article('MongodDB di Elia Lombardi', 'http://www.elia.lombardi.it', 0),
+            new Article('Angular2 di Elia Lombardi', 
+                'http://www.elia.lombardi.it',
+                10,
+                'https://unsplash.it/200?random',
+                ['development', 'frontend', 'frameworks']),
+            new Article('React di Elia Lombardi', 'http://www.elia.lombardi.it', 5, 'https://unsplash.it/300/400?random'),
+            new Article('MongodDB di Elia Lombardi', 'http://www.elia.lombardi.it', 0, 'https://unsplash.it/200/100?random'),
         ];
         
     }
